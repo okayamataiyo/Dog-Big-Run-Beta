@@ -64,7 +64,7 @@ class Fbx
 	{
 		XMFLOAT3 posOrigin;
 		XMFLOAT3 normalOrigin;
-		int*     pBoneIndex;
+		int* pBoneIndex;
 		float* pBoneWeight;
 	};
 
@@ -80,20 +80,20 @@ class Fbx
 	int materialCount_;					//マテリアルの個数
 
 	FbxScene* pFbxScene_;				//FBXファイルのシーン(Mayaで作った全ての物体)を扱う
-	ID3D11Buffer*  pVertexBuffer_;		//頂点バッファ
+	ID3D11Buffer* pVertexBuffer_;		//頂点バッファ
 	ID3D11Buffer** pIndexBuffer_;		//インデックスバッファ
-	ID3D11Buffer*  pConstantBuffer_;	//コンスタントバッファ
-	MATERIAL*      pMaterialList_;
+	ID3D11Buffer* pConstantBuffer_;	//コンスタントバッファ
+	MATERIAL* pMaterialList_;
 	vector<int>    indexCount_;
 	vector<Fbx*>   parts_;
-//	int* indexCount_;
+	//	int* indexCount_;
 
-	//ボーン制御情報
-	FbxSkin*       pSkinInfo_;
-	FbxCluster**   ppCluster_;
+		//ボーン制御情報
+	FbxSkin* pSkinInfo_;
+	FbxCluster** ppCluster_;
 	int            numBone_;
-	Bone*          pBoneArray_;
-	Weight*        pWeightArray_;
+	Bone* pBoneArray_;
+	Weight* pWeightArray_;
 
 	void InitVertex(fbxsdk::FbxMesh* _mesh);
 	void InitIndex(fbxsdk::FbxMesh* _mesh);
@@ -106,16 +106,17 @@ class Fbx
 	VERTEX* pVertexData_;
 	DWORD** ppIndexData_;
 	FbxTime::EMode frameRate_;
-	float		   nowFrame_,animSpeed_;
+	float		   nowFrame_, animSpeed_;
 	int			   startFrame_, endFrame_;
 
 public:
 	//メンバ関数
 	Fbx();
 	HRESULT Load(std::string _fileName);
-	void Draw(Transform& _transform,int _frame);
+	void Draw(Transform& _transform, int _frame);
 	void DrawSkinAnime(Transform& _transform, FbxTime _time);
 	void DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene);
+	XMFLOAT3 GetBonePosition(string _boneName);
 	bool GetBonePosition(string _boneName, XMFLOAT3* _position);
 	FbxSkin* GetSkinInfo() { return pSkinInfo_; }
 	void Release();

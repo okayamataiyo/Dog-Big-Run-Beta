@@ -31,7 +31,6 @@ void Player::Initialize()
         Stage* pStage = (Stage*)FindObject("Stage");    //ステージオブジェクト
         hStageModel_[i] = pStage->GetModelHandle(i);   //モデル番号を取得
     }
-
 }
 
 void Player::Update()

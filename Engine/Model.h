@@ -45,5 +45,5 @@ namespace Model
 	/// </summary>
 	/// <param name="handle">判定したいモデルの番号</param>
 	/// <param name="data">必要なものをまとめたデータ</param>
-	void RayCast(int handle, RayCastData* data);
+	void RayCast(int _handle, RayCastData* _data);
 };

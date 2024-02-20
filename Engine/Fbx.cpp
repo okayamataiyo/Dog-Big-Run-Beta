@@ -547,6 +547,19 @@ void Fbx::DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene)
     Draw(_transform,frameRate_);
 }
 
+XMFLOAT3 Fbx::GetBonePosition(string _boneName)
+{
+    XMFLOAT3 position = XMFLOAT3(0, 0, 0);
+    for (int i = 0; i < parts_.size(); i++)
+    {
+        if (parts_[i]->GetBonePosition(_boneName, &position))
+        {
+            break;
+        }
+    }
+    return position;
+}
+
 bool Fbx::GetBonePosition(string _boneName, XMFLOAT3* _position)
 {
     for (int i = 0; i < numBone_; i++)
@@ -563,8 +576,6 @@ bool Fbx::GetBonePosition(string _boneName, XMFLOAT3* _position)
             return true;
         }
     }
-
-    return false;
 }
 
 void Fbx::Release()
