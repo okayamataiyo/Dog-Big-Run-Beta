@@ -53,6 +53,21 @@ class Fbx
 		BOOL isTextured;
 	};
 
+	struct Bone
+	{
+		XMMATRIX bindPose;
+		XMMATRIX newPose;
+		XMMATRIX diffPose;
+	};
+
+	struct Weight
+	{
+		XMFLOAT3 posOrigin;
+		XMFLOAT3 normalOrigin;
+		int*     pBoneIndex;
+		float* pBoneWeight;
+	};
+
 	//頂点情報
 	struct VERTEX {
 		XMVECTOR position;			//頂点数
@@ -64,31 +79,44 @@ class Fbx
 	int polygonCount_;				//ポリゴン数
 	int materialCount_;				//マテリアルの個数
 
-	ID3D11Buffer* pVertexBuffer_;	//頂点バッファ
+	ID3D11Buffer*  pVertexBuffer_;	//頂点バッファ
 	ID3D11Buffer** pIndexBuffer_;	//インデックスバッファ
-	ID3D11Buffer* pConstantBuffer_;	//コンスタントバッファ
-	MATERIAL* pMaterialList_;
-	vector<int> indexCount_;
-	vector<Fbx*> parts_;
+	ID3D11Buffer*  pConstantBuffer_;	//コンスタントバッファ
+	MATERIAL*      pMaterialList_;
+	vector<int>    indexCount_;
+	vector<Fbx*>   parts_;
 //	int* indexCount_;
 
-	void InitVertex(fbxsdk::FbxMesh* mesh);
-	void InitIndex(fbxsdk::FbxMesh* mesh);
+	//ボーン制御情報
+	FbxSkin*       pSkinInfo_;
+	FbxCluster**   ppCluster_;
+	int            numBone_;
+	Bone*          pBoneArray_;
+	Weight*        pWeightArray_;
+
+	void InitVertex(fbxsdk::FbxMesh* _mesh);
+	void InitIndex(fbxsdk::FbxMesh* _mesh);
 	void InitConstantBuffer();
-	void InitMaterial(fbxsdk::FbxNode* pNode);
+	void InitMaterial(fbxsdk::FbxNode* _pNode);
+	void InitSkelton(FbxMesh* _pMesh);
 	bool IsFloatColor_;
 	XMFLOAT4 dColor_;
 	Texture* pToonTex_;
 	VERTEX* pVertexData_;
 	DWORD** ppIndexData_;
+	FbxTime::EMode frameRate_;
+	float		   animSpeed_;
+	int			   startFrame_, endFrame_;
 
 public:
 	//メンバ関数
 	Fbx();
-	void SetFlagColor(XMFLOAT4 col);
-	HRESULT Load(std::string fileName);
-	void Draw(Transform& transform);
-	void DrawToon(Transform& transform);
+	HRESULT Load(std::string _fileName);
+	void Draw(Transform& _transform);
+	void DrawSkinAnime(Transform& _transform, FbxTime _time);
+	void DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene);
+	bool GetBonePosition(string _boneName, XMFLOAT3* _position);
+	FbxSkin* GetSkinInfo() { return pSkinInfo_; }
 	void Release();
 	
 	/// <summary>

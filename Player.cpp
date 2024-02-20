@@ -315,7 +315,7 @@ void Player::PlayerGravity()
     }
     //▼前の法線(壁の当たり判定)
     frontData.start = transform_.position_;       //レイの発射位置
-    frontData.dir = XMFLOAT3(0, 0, 1);            //レイの方向
+    frontData.dir = XMFLOAT3(0, 1, 1);            //レイの方向
     Model::RayCast(hStageModel_[0], &frontData);  //レイを発射
     rayFrontDist_ = frontData.dist;
     ImGui::Text("rayFrontDist_=%f", rayFrontDist_);
@@ -325,7 +325,7 @@ void Player::PlayerGravity()
     }
     //▼後ろの法線(壁の当たり判定)
     backData.start = transform_.position_;       //レイの発射位置
-    backData.dir = XMFLOAT3(0, 0, -1);           //レイの方向
+    backData.dir = XMFLOAT3(0, 1, -1);           //レイの方向
     Model::RayCast(hStageModel_[0], &backData);  //レイを発射
     rayBackDist_ = backData.dist;
     ImGui::Text("rayBackDist_=%f", rayBackDist_);
@@ -335,7 +335,7 @@ void Player::PlayerGravity()
     }
     //▼左の法線(壁の当たり判定)
     leftData.start = transform_.position_;       //レイの発射位置
-    leftData.dir = XMFLOAT3(-1, 0, 0);           //レイの方向
+    leftData.dir = XMFLOAT3(-1, 1, 0);           //レイの方向
     Model::RayCast(hStageModel_[0], &leftData);  //レイを発射
     rayLeftDist_ = leftData.dist;
     ImGui::Text("rayLeftDist_=%f", rayLeftDist_);
@@ -345,7 +345,7 @@ void Player::PlayerGravity()
     }
     //▼右の法線(壁の当たり判定)
     rightData.start = transform_.position_;       //レイの発射位置
-    rightData.dir = XMFLOAT3(1, 0, 0);           //レイの方向
+    rightData.dir = XMFLOAT3(1, 1, 0);           //レイの方向
     Model::RayCast(hStageModel_[0], &rightData);  //レイを発射
     rayRightDist_ = rightData.dist;
     ImGui::Text("rayRightDist_=%f", rayRightDist_);
