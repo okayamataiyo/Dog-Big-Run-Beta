@@ -17,17 +17,17 @@ Fbx::Fbx():
 HRESULT Fbx::Load(std::string _fileName)
 {
     FbxManager* pFbxManager = FbxManager::Create();                        //マネージャを生成
-    FbxScene* pFbxScene = FbxScene::Create(pFbxManager, "fbxscene");       //シーンオブジェクトにFBXファイルの情報を流し込む
+    pFbxScene_ = FbxScene::Create(pFbxManager, "fbxscene");       //シーンオブジェクトにFBXファイルの情報を流し込む
     FbxImporter* fbxImporter = FbxImporter::Create(pFbxManager, "imp");    //インポーターを生成
     fbxImporter->Initialize(_fileName.c_str(), -1, pFbxManager->GetIOSettings());
-    fbxImporter->Import(pFbxScene);
+    fbxImporter->Import(pFbxScene_);
     fbxImporter->Destroy();
 
-    frameRate_ = pFbxScene->GetGlobalSettings().GetTimeMode();
+    frameRate_ = pFbxScene_->GetGlobalSettings().GetTimeMode();
 
     //メッシュ情報を取得
     //ルートノードを取得して
-    FbxNode* rootNode = pFbxScene->GetRootNode();
+    FbxNode* rootNode = pFbxScene_->GetRootNode();
 
     //そいつの子供の数を調べて
     FbxNode* pNode = rootNode->GetChild(0);
@@ -402,8 +402,25 @@ void Fbx::InitSkelton(FbxMesh* _pMesh)
 }
 
 //テクスチャをロード
-void Fbx::Draw(Transform& _transform)
+void Fbx::Draw(Transform& _transform, int _frame)
 {
+    //▼その瞬間の自分の姿勢行列を得る
+    FbxTime time;
+    time.SetTime(0, 0, 0, _frame, 0, 0, frameRate_);
+
+    for (int k = 0; k < parts_.size(); k++)
+    {
+        //スキンアニメーション(ボーン有り)の場合
+        if (parts_[k]->GetSkinInfo() != nullptr)
+        {
+            parts_[k]->DrawSkinAnime(_transform, time);
+        }
+        //メッシュアニメーションの場合
+        else
+        {
+            parts_[k]->DrawMeshAnime(_transform, time, pFbxScene_);
+        }
+    }
     _transform.Calclation();//トランスフォームを計算
     for (int i = 0; i < materialCount_; i++)
     {
@@ -522,12 +539,12 @@ void Fbx::DrawSkinAnime(Transform& _transform, FbxTime _time)
         memcpy_s(msr.pData, msr.RowPitch, pVertexData_, sizeof(VERTEX) * vertexCount_);
         Direct3D::pContext_->Unmap(pVertexBuffer_, 0);
     }
-    Draw(_transform);
+    Draw(_transform,frameRate_);
 }
 
 void Fbx::DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene)
 {
-    Draw(_transform);
+    Draw(_transform,frameRate_);
 }
 
 bool Fbx::GetBonePosition(string _boneName, XMFLOAT3* _position)

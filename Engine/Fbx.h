@@ -70,17 +70,18 @@ class Fbx
 
 	//頂点情報
 	struct VERTEX {
-		XMVECTOR position;			//頂点数
-		XMVECTOR uv;				//ポリゴン数
-		XMVECTOR normal;			//マテリアルの個数
+		XMVECTOR position;				//頂点数
+		XMVECTOR uv;					//ポリゴン数
+		XMVECTOR normal;				//マテリアルの個数
 	};
 
-	int vertexCount_;				//頂点数	FBXファイルを扱うために必要になる変数を宣言する。
-	int polygonCount_;				//ポリゴン数
-	int materialCount_;				//マテリアルの個数
+	int vertexCount_;					//頂点数	FBXファイルを扱うために必要になる変数を宣言する。
+	int polygonCount_;					//ポリゴン数
+	int materialCount_;					//マテリアルの個数
 
-	ID3D11Buffer*  pVertexBuffer_;	//頂点バッファ
-	ID3D11Buffer** pIndexBuffer_;	//インデックスバッファ
+	FbxScene* pFbxScene_;				//FBXファイルのシーン(Mayaで作った全ての物体)を扱う
+	ID3D11Buffer*  pVertexBuffer_;		//頂点バッファ
+	ID3D11Buffer** pIndexBuffer_;		//インデックスバッファ
 	ID3D11Buffer*  pConstantBuffer_;	//コンスタントバッファ
 	MATERIAL*      pMaterialList_;
 	vector<int>    indexCount_;
@@ -105,14 +106,14 @@ class Fbx
 	VERTEX* pVertexData_;
 	DWORD** ppIndexData_;
 	FbxTime::EMode frameRate_;
-	float		   animSpeed_;
+	float		   nowFrame_,animSpeed_;
 	int			   startFrame_, endFrame_;
 
 public:
 	//メンバ関数
 	Fbx();
 	HRESULT Load(std::string _fileName);
-	void Draw(Transform& _transform);
+	void Draw(Transform& _transform,int _frame);
 	void DrawSkinAnime(Transform& _transform, FbxTime _time);
 	void DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene);
 	bool GetBonePosition(string _boneName, XMFLOAT3* _position);
