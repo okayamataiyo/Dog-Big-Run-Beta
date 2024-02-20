@@ -18,8 +18,9 @@ Player::~Player()
 void Player::Initialize()
 {
     //モデルデータのロード
-    hModel_ = Model::Load("Assets/Dog.fbx");
+    hModel_ = Model::Load("Assets/DogWalk.fbx");
     assert(hModel_ >= 0);
+    Model::SetAnimFrame(hModel_, 1, 60, 1);
     transform_.scale_ = { 0.5,0.5,0.5 };
     posY_ = transform_.position_.y;
     prevPosition_ = transform_.position_;
@@ -68,6 +69,7 @@ void Player::UpdatePlay()
 {
     PlayerGravity();
     PlayerMove();
+    ImGui::Text("AnimFrame = %i", Model::GetAnimFrame(hModel_));
     ImGui::Text("moveYPrev_=%f", moveYPrev_);
     ImGui::Text("moveYTemp_=%f", moveYTemp_);
     ImGui::Text("Transform_.position_.x=%f", transform_.position_.x);
