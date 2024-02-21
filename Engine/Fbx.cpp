@@ -10,7 +10,7 @@ using namespace DirectX;
 Fbx::Fbx():
     vertexCount_(0),polygonCount_(0),materialCount_(0),
     pVertexBuffer_(nullptr),pIndexBuffer_(nullptr),pConstantBuffer_(nullptr),
-    pMaterialList_(nullptr),ppIndexData_(nullptr),pVertexData_(nullptr)
+    pMaterialList_(nullptr),ppIndexData_(nullptr),pVertexData_(nullptr),animSpeed_(0)
 {
 }
 
@@ -38,7 +38,7 @@ HRESULT Fbx::Init(FbxNode* _pNode)
 HRESULT Fbx::Load(std::string _fileName)
 {
     FbxManager* pFbxManager = FbxManager::Create();                        //マネージャを生成
-    pFbxScene_ = FbxScene::Create(pFbxManager, "fbxscene");       //シーンオブジェクトにFBXファイルの情報を流し込む
+    pFbxScene_ = FbxScene::Create(pFbxManager, "fbxscene");                //シーンオブジェクトにFBXファイルの情報を流し込む
     FbxImporter* fbxImporter = FbxImporter::Create(pFbxManager, "imp");    //インポーターを生成
     fbxImporter->Initialize(_fileName.c_str(), -1, pFbxManager->GetIOSettings());
     fbxImporter->Import(pFbxScene_);
@@ -55,16 +55,12 @@ HRESULT Fbx::Load(std::string _fileName)
     FbxNode* pNode = rootNode->GetChild(0);
     FbxMesh* mesh = pNode->GetMesh();
 
-    //現在のカレントディレクトリを取得
-    char defaultCurrentDir[MAX_PATH];
+    char defaultCurrentDir[MAX_PATH];                       //現在のカレントディレクトリを取得
     GetCurrentDirectory(MAX_PATH, defaultCurrentDir);
 
-    //引数のfileNameからディレクトリ部分を取得
-    char dir[MAX_PATH];
+    char dir[MAX_PATH];                                     //引数のfileNameからディレクトリ部分を取得
     _splitpath_s(_fileName.c_str(), nullptr, 0, dir, MAX_PATH, nullptr, 0, nullptr, 0);
-
-    //カレントディレクトリ変更
-    SetCurrentDirectory(dir);
+    SetCurrentDirectory(dir);                               //カレントディレクトリ変更
 
     for (int i = 0; childCount > i; i++)
     {
@@ -73,24 +69,17 @@ HRESULT Fbx::Load(std::string _fileName)
 
     ////各情報の個数を取得
     //vertexCount_  = mesh->GetControlPointsCount();	//頂点の数
-    //polygonCount_ = mesh->GetPolygonCount();	    //ポリゴンの数
-
-
-
+    //polygonCount_ = mesh->GetPolygonCount();	        //ポリゴンの数
     
-
     //InitVertex(mesh);		//頂点バッファ準備
     //InitIndex(mesh);		//インデックスバッファ準備
     //InitConstantBuffer();	//コンスタントバッファ準備
-    //InitMaterial(pNode);    //ノードからマテリアルの情報を引き出す
+    //InitMaterial(pNode);  //ノードからマテリアルの情報を引き出す
 
-    //カレントディレクトリを元に戻す
-    SetCurrentDirectory(defaultCurrentDir);
+    SetCurrentDirectory(defaultCurrentDir);                 //カレントディレクトリを元に戻す
 
     //マネージャ解放
     //pFbxManager->Destroy();
-    //pToonTex_ = new Texture;
-    //pToonTex_->Load("Assets\\toon2.png");
 
     return S_OK;
 }
@@ -643,14 +632,14 @@ void Fbx::Release()
 
 }
 
-void Fbx::RayCast(RayCastData* data)
+void Fbx::RayCast(RayCastData* _pData)
 {
     //全てのパーツと判定
     for (int i = 0; i < parts_.size(); i++)
     {
-        parts_[i]->RayCast(data);
+        parts_[i]->RayCast(_pData);
     }
-    data->hit = false;
+    _pData->hit = false;
 
     //マテリアル毎
     for (DWORD i = 0; i < materialCount_; i++)
@@ -663,16 +652,16 @@ void Fbx::RayCast(RayCastData* data)
             XMStoreFloat3(&ver[1], pVertexData_[ppIndexData_[i][j * 3 + 1]].position);
             XMStoreFloat3(&ver[2], pVertexData_[ppIndexData_[i][j * 3 + 2]].position);
 
-            BOOL  hit = FALSE;
+            BOOL  hit = false;
             float dist = 0.0f;
 
-            hit = Direct3D::Intersect(data->start, data->dir, ver[0], ver[1], ver[2], &dist);
+            hit = Direct3D::Intersect(_pData->start, _pData->dir, ver[0], ver[1], ver[2], &dist);
 
 
-            if (hit && dist < data->dist)
+            if (hit && dist < _pData->dist)
             {
-                data->hit = TRUE;
-                data->dist = dist;
+                _pData->hit = true;
+                _pData->dist = dist;
             }
         }
     }

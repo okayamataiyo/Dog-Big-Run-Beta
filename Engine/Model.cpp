@@ -5,12 +5,16 @@ namespace Model
 	//モデルのポインタをぶち込んでおくベクタ
 	vector<ModelData* >modelList;
 
-	int Model::Load(string _fileName)
+	void Initialize()
 	{
-		ModelData* pData;
-		pData = new ModelData;
+		AllRelease();
+	}
+
+	int Load(string _fileName)
+	{
+		ModelData* pData = new ModelData;
 		pData->filename_ = _fileName;
-		pData->pFbx_ = nullptr;
+		//pData->pFbx_ = nullptr;
 
 		//ファイルネームが同じだったら、読まん
 		for (auto& e : modelList) {
@@ -36,16 +40,16 @@ namespace Model
 		modelList[_hModel]->SetAnimFrame(_startFrame, _endFrame, _animSpeed);
 	}
 
-	void Model::SetTransform(int _hModel, Transform _transform)
+	void SetTransform(int _hModel, Transform _transform)
 	{
 		//モデル番号は、modelListのインデックス
 		modelList[_hModel]->transform_ = _transform;
 
 	}
 
-	int GetAnimFrame(int _hModel_)
+	int GetAnimFrame(int _hModel)
 	{
-		return (int)modelList[_hModel_]->nowFrame;
+		return (int)modelList[_hModel]->nowFrame;
 	}
 
 	XMFLOAT3 GetBonePosition(int _hModel, string _boneName)
@@ -56,7 +60,7 @@ namespace Model
 		return pos;
 	}
 
-	void Model::Draw(int _hModel)
+	void Draw(int _hModel)
 	{
 		if (_hModel < 0 || _hModel >= modelList.size() || modelList[_hModel] == nullptr)
 		{
@@ -77,7 +81,7 @@ namespace Model
 		}
 	}
 
-	void Model::Release()
+	void Release(int _hModel)
 	{
 		bool isReffered = false;	//参照されてる?
 		for (int i = 0; i < modelList.size(); i++) {
@@ -96,7 +100,19 @@ namespace Model
 
 	}
 
-	void Model::RayCast(int _handle, RayCastData* _data)
+	void AllRelease()
+	{
+		for (int i = 0; i < modelList.size(); i++)
+		{
+			if (modelList[i] != nullptr)
+			{
+				Release(i);
+			}
+			modelList.clear();
+		}
+	}
+
+	void RayCast(int _handle, RayCastData* _data)
 	{
 		XMFLOAT3 target = Transform::Float3Add(_data->start, _data->dir);
 		XMMATRIX matInv = XMMatrixInverse(nullptr, modelList[_handle]->transform_.GetWorldMatrix());

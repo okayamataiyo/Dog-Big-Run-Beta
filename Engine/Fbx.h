@@ -1,11 +1,12 @@
 #pragma once
+//インクルード
 #include <d3d11.h>
 #include <fbxsdk.h>
 #include <string>
 #include <vector>
 #include "Transform.h"
 #include "Camera.h"
-
+//リンカ
 #pragma comment(lib, "LibFbxSDK-MD.lib")
 #pragma comment(lib, "LibXml2-MD.lib")
 #pragma comment(lib, "zlib-MD.lib")
@@ -87,9 +88,8 @@ class Fbx
 	MATERIAL* pMaterialList_;
 	vector<int>    indexCount_;
 	vector<Fbx*>   parts_;
-	//	int* indexCount_;
-
-		//ボーン制御情報
+	
+	//ボーン制御情報
 	FbxSkin* pSkinInfo_;
 	FbxCluster** ppCluster_;
 	int            numBone_;
@@ -103,7 +103,6 @@ class Fbx
 	void InitSkelton(FbxMesh* _pMesh);
 	bool IsFloatColor_;
 	XMFLOAT4 dColor_;
-	Texture* pToonTex_;
 	VERTEX* pVertexData_;
 	DWORD** ppIndexData_;
 	FbxTime::EMode frameRate_;

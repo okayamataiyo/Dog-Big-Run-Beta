@@ -31,14 +31,15 @@ namespace Model
 			animSpeed = _speed;
 		}
 	};
-
+	void Initialize();
 	int Load(std::string fileName);
 	void SetAnimFrame(int _hModel, int _startFrame, int _endFrame, float _animSpeed);
 	void SetTransform(int hModel, Transform transform);
 	int GetAnimFrame(int _hModel_);
 	XMFLOAT3 GetBonePosition(int _hModel, string _boneName);
 	void Draw(int _hModel);
-	void Release();
+	void Release(int _hModel);
+	void AllRelease();
 
 	/// <summary>
 	/// レイキャスト(レイを飛ばして当たり判定)

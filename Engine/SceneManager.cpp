@@ -30,7 +30,7 @@ void SceneManager::Update()
 		KillAllChildren();
 
 		//ロードしたデータを全削除
-		Model::Release();
+		Model::AllRelease();
 		//後片付け終了
 		switch (nextSceneID_) {
 
