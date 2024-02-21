@@ -14,6 +14,26 @@ Fbx::Fbx():
 {
 }
 
+HRESULT Fbx::Init(FbxNode* _pNode)
+{
+    //ノードからメッシュの情報を取得
+    FbxMesh* mesh = _pNode->GetMesh();
+
+    //各情報の個数を取得
+    vertexCount_ = mesh->GetControlPointsCount();			//頂点の数
+    polygonCount_ = mesh->GetPolygonCount();				//ポリゴンの数
+    polygonVertexCount_ = mesh->GetPolygonVertexCount();	//ポリゴン頂点インデックス数 
+
+
+    InitVertex(mesh);		//頂点バッファ準備
+    InitMaterial(_pNode);	//マテリアル準備
+    InitIndex(mesh);		//インデックスバッファ準備
+    InitSkelton(mesh);		//骨の情報を準備
+    InitConstantBuffer();	//コンスタントバッファ（シェーダーに情報を送るやつ）準備
+
+    return E_NOTIMPL;
+}
+
 HRESULT Fbx::Load(std::string _fileName)
 {
     FbxManager* pFbxManager = FbxManager::Create();                        //マネージャを生成
@@ -30,8 +50,14 @@ HRESULT Fbx::Load(std::string _fileName)
     FbxNode* rootNode = pFbxScene_->GetRootNode();
 
     //そいつの子供の数を調べて
+    int childCount = rootNode->GetChildCount();
     FbxNode* pNode = rootNode->GetChild(0);
     FbxMesh* mesh = pNode->GetMesh();
+
+    for (int i = 0; childCount > i; i++)
+    {
+        CheckNode(rootNode->GetChild(i), &parts_);
+    }
 
     //各情報の個数を取得
     vertexCount_  = mesh->GetControlPointsCount();	//頂点の数
@@ -422,27 +448,36 @@ void Fbx::Draw(Transform& _transform, int _frame)
         }
     }
     _transform.Calclation();//トランスフォームを計算
+}
+
+void Fbx::Draw(Transform& _transform)
+{
+    //頂点バッファ
+    UINT stride = sizeof(VERTEX);
+    UINT offset = 0;
+    Direct3D::pContext_->IASetVertexBuffers(0, 1, &pConstantBuffer_,&stride,&offset);
+    Direct3D::pContext_->VSSetConstantBuffers(0, 1, &pConstantBuffer_);
+    Direct3D::pContext_->PSSetConstantBuffers(0, 1, &pConstantBuffer_);
     for (int i = 0; i < materialCount_; i++)
     {
+        UINT stride = sizeof(int);
+        UINT offset = 0;
+        Direct3D::pContext_->IASetIndexBuffer(pIndexBuffer_[i], DXGI_FORMAT_R32_UINT, 0);
 
         //コンスタントバッファに情報を渡す
+        D3D11_MAPPED_SUBRESOURCE pData;
         CONSTANT_BUFFER_MODEL cb;
         cb.matWVP = XMMatrixTranspose(_transform.GetWorldMatrix() * pCamera->GetViewMatrix() * pCamera->GetProjectionMatrix());
         cb.matNormal = XMMatrixTranspose(_transform.GetNormalMatrix());
         cb.matW = XMMatrixTranspose(_transform.GetNormalMatrix());
-
         cb.diffuseColor = pMaterialList_[i].diffuse;
         cb.ambientColor = pMaterialList_[i].ambient;
         cb.specularColor = pMaterialList_[i].specular;
         cb.shineness = pMaterialList_[i].shineness;
         cb.isTextured = pMaterialList_[i].pTexture != nullptr;
-
+        Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData);
+        memcpy_s(pData.pData, pData.RowPitch, (void*)(&cb), sizeof(cb));
         Direct3D::pContext_->UpdateSubresource(pConstantBuffer_, 0, NULL, &cb, 0, 0);
-
-        //頂点バッファ
-        UINT stride = sizeof(VERTEX);
-        UINT offset = 0;
-        Direct3D::pContext_->IASetVertexBuffers(0, 1, &pVertexBuffer_, &stride, &offset);
 
         // インデックスバッファーをセット
         stride = sizeof(int);
@@ -539,12 +574,12 @@ void Fbx::DrawSkinAnime(Transform& _transform, FbxTime _time)
         memcpy_s(msr.pData, msr.RowPitch, pVertexData_, sizeof(VERTEX) * vertexCount_);
         Direct3D::pContext_->Unmap(pVertexBuffer_, 0);
     }
-    Draw(_transform,frameRate_);
+    Draw(_transform);
 }
 
 void Fbx::DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene)
 {
-    Draw(_transform,frameRate_);
+    Draw(_transform);
 }
 
 XMFLOAT3 Fbx::GetBonePosition(string _boneName)
@@ -575,6 +610,28 @@ bool Fbx::GetBonePosition(string _boneName, XMFLOAT3* _position)
 
             return true;
         }
+    }
+}
+
+void Fbx::CheckNode(FbxNode* _pNode, vector<Fbx*>* _pPartsList)
+{
+    //そのノードにはメッシュ情報が入っているだろうか？
+    FbxNodeAttribute* attr = _pNode->GetNodeAttribute();
+    if (attr != nullptr && attr->GetAttributeType() == FbxNodeAttribute::eMesh)
+    {
+        Fbx* pParts = new Fbx;
+        pParts->Init(_pNode);
+
+        _pPartsList->push_back(pParts);
+    }
+
+    //子ノードにもデータがあるかも
+    //子供の数を調べて
+    int childCount = _pNode->GetChildCount();
+
+    for (int i = 0; i < childCount; i++)
+    {
+        CheckNode(_pNode->GetChild(i), _pPartsList);
     }
 }
 

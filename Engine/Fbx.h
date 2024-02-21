@@ -78,6 +78,7 @@ class Fbx
 	int vertexCount_;					//頂点数	FBXファイルを扱うために必要になる変数を宣言する。
 	int polygonCount_;					//ポリゴン数
 	int materialCount_;					//マテリアルの個数
+	int polygonVertexCount_;
 
 	FbxScene* pFbxScene_;				//FBXファイルのシーン(Mayaで作った全ての物体)を扱う
 	ID3D11Buffer* pVertexBuffer_;		//頂点バッファ
@@ -112,13 +113,16 @@ class Fbx
 public:
 	//メンバ関数
 	Fbx();
+	HRESULT Init(FbxNode* _pNode);
 	HRESULT Load(std::string _fileName);
 	void Draw(Transform& _transform, int _frame);
+	void Draw(Transform& _transform);
 	void DrawSkinAnime(Transform& _transform, FbxTime _time);
 	void DrawMeshAnime(Transform& _transform, FbxTime _time, FbxScene* _scene);
 	XMFLOAT3 GetBonePosition(string _boneName);
 	bool GetBonePosition(string _boneName, XMFLOAT3* _position);
 	FbxSkin* GetSkinInfo() { return pSkinInfo_; }
+	void CheckNode(FbxNode* _pNode, vector<Fbx*>* _pPartsList);
 	void Release();
 	
 	/// <summary>
