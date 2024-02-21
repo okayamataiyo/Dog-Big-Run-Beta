@@ -23,6 +23,7 @@ HRESULT Fbx::Init(FbxNode* _pNode)
     vertexCount_ = mesh->GetControlPointsCount();			//頂点の数
     polygonCount_ = mesh->GetPolygonCount();				//ポリゴンの数
     polygonVertexCount_ = mesh->GetPolygonVertexCount();	//ポリゴン頂点インデックス数 
+    materialCount_ = _pNode->GetMaterialCount();     //マテリアルの数
 
 
     InitVertex(mesh);		//頂点バッファ準備
@@ -54,17 +55,6 @@ HRESULT Fbx::Load(std::string _fileName)
     FbxNode* pNode = rootNode->GetChild(0);
     FbxMesh* mesh = pNode->GetMesh();
 
-    for (int i = 0; childCount > i; i++)
-    {
-        CheckNode(rootNode->GetChild(i), &parts_);
-    }
-
-    //各情報の個数を取得
-    vertexCount_  = mesh->GetControlPointsCount();	//頂点の数
-    polygonCount_ = mesh->GetPolygonCount();	    //ポリゴンの数
-    materialCount_ = pNode->GetMaterialCount();     //マテリアルの数
-
-
     //現在のカレントディレクトリを取得
     char defaultCurrentDir[MAX_PATH];
     GetCurrentDirectory(MAX_PATH, defaultCurrentDir);
@@ -76,17 +66,30 @@ HRESULT Fbx::Load(std::string _fileName)
     //カレントディレクトリ変更
     SetCurrentDirectory(dir);
 
-    InitVertex(mesh);		//頂点バッファ準備
-    InitIndex(mesh);		//インデックスバッファ準備
-    InitConstantBuffer();	//コンスタントバッファ準備
-    InitMaterial(pNode);    //ノードからマテリアルの情報を引き出す
+    for (int i = 0; childCount > i; i++)
+    {
+        CheckNode(rootNode->GetChild(i), &parts_);
+    }
+
+    ////各情報の個数を取得
+    //vertexCount_  = mesh->GetControlPointsCount();	//頂点の数
+    //polygonCount_ = mesh->GetPolygonCount();	    //ポリゴンの数
+
+
+
+    
+
+    //InitVertex(mesh);		//頂点バッファ準備
+    //InitIndex(mesh);		//インデックスバッファ準備
+    //InitConstantBuffer();	//コンスタントバッファ準備
+    //InitMaterial(pNode);    //ノードからマテリアルの情報を引き出す
 
     //カレントディレクトリを元に戻す
     SetCurrentDirectory(defaultCurrentDir);
 
     //マネージャ解放
-    pFbxManager->Destroy();
-    pToonTex_ = new Texture;
+    //pFbxManager->Destroy();
+    //pToonTex_ = new Texture;
     //pToonTex_->Load("Assets\\toon2.png");
 
     return S_OK;
@@ -214,9 +217,9 @@ void Fbx::InitConstantBuffer()
 {
     D3D11_BUFFER_DESC cb;
     cb.ByteWidth = sizeof(CONSTANT_BUFFER_MODEL);
-    cb.Usage = D3D11_USAGE_DEFAULT;
+    cb.Usage = D3D11_USAGE_DYNAMIC;
     cb.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cb.CPUAccessFlags = 0;
+    cb.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     cb.MiscFlags = 0;
     cb.StructureByteStride = 0;
 
@@ -509,8 +512,8 @@ void Fbx::Draw(Transform& _transform)
             Direct3D::pContext_->PSSetShaderResources(0, 1, &pSRV);
         }
 
-        ID3D11ShaderResourceView* pSRVToon = pToonTex_->GetSRV();
-        Direct3D::pContext_->PSSetShaderResources(1, 1, &pSRVToon);
+        //ID3D11ShaderResourceView* pSRVToon = pToonTex_->GetSRV();
+        //Direct3D::pContext_->PSSetShaderResources(1, 1, &pSRVToon);
 
         //描画
         Direct3D::pContext_->DrawIndexed(indexCount_[i], 0, 0);
