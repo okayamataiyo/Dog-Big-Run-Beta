@@ -13,24 +13,84 @@ Sprite::~Sprite()
 	Release();
 }
 
-HRESULT Sprite::Initialize()
+HRESULT Sprite::Load(string _fileName)
 {
-	//頂点情報
-	InitVertexData();
-	if (FAILED(CreateVertexBuffer()))
+	pTexture_ = new Texture();
+	if (FAILED(pTexture_->Load(_fileName)))
 	{
 		return E_FAIL;
 	}
-	InitIndexData();
-	if (FAILED(CreateIndexBuffer()))
-	{
-		return E_FAIL;
-	}
-	if (FAILED(CreateConstantBuffer()))
-	{
-		return E_FAIL;
-	}
+	InitVertex();
+
+	InitIndex();
+
+	InitConstantBuffer();
+
 	return S_OK;
+}
+
+void Sprite::Draw(Transform& _transform, RECT _rect, float _alpha)
+{
+	//いろいろ設定
+	Direct3D::SetShader(SHADER_2D);
+	UINT stride = sizeof(VERTEX);
+	UINT offset = 0;
+	Direct3D::pContext_->IASetVertexBuffers(0, 1, &pVertexBuffer_, &stride, &offset);
+	Direct3D::pContext_->VSSetConstantBuffers(0, 1, &pConstantBuffer_);
+	Direct3D::pContext_->PSSetConstantBuffers(0, 1, &pConstantBuffer_);
+	//Direct3D::SetDepthBafferWriteEnable(false);
+
+
+	// インデックスバッファーをセット
+	stride = sizeof(int);
+	offset = 0;
+	Direct3D::pContext_->IASetIndexBuffer(pIndexBuffer_, DXGI_FORMAT_R32_UINT, 0);
+
+	// パラメータの受け渡し
+	D3D11_MAPPED_SUBRESOURCE pdata;
+	CONSTANT_BUFFER cb;
+
+
+	//表示するサイズに合わせる
+	XMMATRIX cut = XMMatrixScaling((float)_rect.right, (float)_rect.bottom, 1);
+
+	//画面に合わせる
+	XMMATRIX view = XMMatrixScaling(1.0f / Direct3D::width_, 1.0f / Direct3D::height_, 1.0f);
+
+	//最終的な行列
+	XMMATRIX world = cut * _transform.matScale_ * _transform.matRotate_ * view * _transform.matTranslate_;
+	cb.world = XMMatrixTranspose(world);
+
+	// テクスチャ座標変換行列を渡す
+	XMMATRIX mTexTrans = XMMatrixTranslation((float)_rect.left / (float)pTexture_->GetSize().x,
+		(float)_rect.top / (float)pTexture_->GetSize().y, 0.0f);
+	XMMATRIX mTexScale = XMMatrixScaling((float)_rect.right / (float)pTexture_->GetSize().x,
+		(float)_rect.bottom / (float)pTexture_->GetSize().y, 1.0f);
+	XMMATRIX mTexel = mTexScale * mTexTrans;
+	cb.uvTrans = XMMatrixTranspose(mTexel);
+
+
+	// テクスチャ合成色情報を渡す
+	cb.color = XMFLOAT4(1, 1, 1, _alpha);
+
+	Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pdata);	// GPUからのリソースアクセスを一時止める
+	memcpy_s(pdata.pData, pdata.RowPitch, (void*)(&cb), sizeof(cb));		// リソースへ値を送る
+
+
+	ID3D11SamplerState* pSampler = pTexture_->GetSampler();
+	Direct3D::pContext_->PSSetSamplers(0, 1, &pSampler);
+
+	ID3D11ShaderResourceView* pSRV = pTexture_->GetSRV();
+	Direct3D::pContext_->PSSetShaderResources(0, 1, &pSRV);
+
+	Direct3D::pContext_->Unmap(pConstantBuffer_, 0);									// GPUからのリソースアクセスを再開
+
+	//ポリゴンメッシュを描画する
+	Direct3D::pContext_->DrawIndexed(6, 0, 0);
+
+	Direct3D::SetShader(SHADER_3D);
+
+	//Direct3D::SetDepthBafferWriteEnable(true);
 }
 
 void Sprite::Release()
@@ -39,13 +99,17 @@ void Sprite::Release()
 	SAFE_RELEASE(pIndexBuffer_);
 }
 
-void Sprite::InitVertexData()
+void Sprite::InitVertex()
 {
-}
+	VERTEX vertices[] =
+	{
+		{ XMFLOAT3(-1.0f,  1.0f, 0.0f),	XMFLOAT3(0.0f, 0.0f, 0.0f) },   // 四角形の頂点（左上）
+		{ XMFLOAT3(1.0f,  1.0f, 0.0f),	XMFLOAT3(1.0f, 0.0f, 0.0f) },   // 四角形の頂点（右上）
+		{ XMFLOAT3(-1.0f, -1.0f, 0.0f),	XMFLOAT3(0.0f, 1.0f, 0.0f) },   // 四角形の頂点（左下）
+		{ XMFLOAT3(1.0f, -1.0f, 0.0f),	XMFLOAT3(1.0f, 1.0f, 0.0f) },   // 四角形の頂点（右下）
+	};
 
-HRESULT Sprite::CreateVertexBuffer()
-{
-	HRESULT hr;
+	//▼頂点データ用バッファの設定
 	D3D11_BUFFER_DESC bd_vertex;
 	bd_vertex.ByteWidth = sizeof(VERTEX) * vertexNum_;
 	bd_vertex.Usage = D3D11_USAGE_DEFAULT;
@@ -54,49 +118,30 @@ HRESULT Sprite::CreateVertexBuffer()
 	bd_vertex.MiscFlags = 0;
 	bd_vertex.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA data_vertex;
-	//data_vertex.pSysMem = vertices_.data();
-	hr = Direct3D::pDevice_->CreateBuffer(&bd_vertex, &data_vertex, &pVertexBuffer_);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, "頂点バッファの作成に失敗しました", "エラー", MB_OK);
-		return hr;
-	}
-	return S_OK;
+	data_vertex.pSysMem = vertices;
+	Direct3D::pDevice_->CreateBuffer(&bd_vertex, &data_vertex, &pVertexBuffer_);
 }
 
-void Sprite::InitIndexData()
+void Sprite::InitIndex()
 {
-	index_ = { 0,2,3, 0,1,2 };
-	//インデックス数
-	indexNum = index_.size();
-	//メンバ変数へコピー
-	//index_ = new int[indexNum];
-	//memcpy(index_, index, sizeof(index));
-}
+	int index[] = { 2,1,0, 2,3,1 };
 
-HRESULT Sprite::CreateIndexBuffer()
-{
-	D3D11_BUFFER_DESC   bd;
+	//▼インデックスバッファを作成する
+	D3D11_BUFFER_DESC bd;
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(int) * indexNum;
+	bd.ByteWidth = sizeof(index);
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 	bd.MiscFlags = 0;
+
 	D3D11_SUBRESOURCE_DATA InitData;
-	InitData.pSysMem = index_.data();
+	InitData.pSysMem = index;
 	InitData.SysMemPitch = 0;
 	InitData.SysMemSlicePitch = 0;
-	HRESULT hr;
-	hr = Direct3D::pDevice_->CreateBuffer(&bd, &InitData, &pIndexBuffer_);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, "インデックスバッファの作成に失敗しました", "エラー", MB_OK);
-		return hr;
-	}
-	return S_OK;
+	Direct3D::pDevice_->CreateBuffer(&bd, &InitData, &pIndexBuffer_);
 }
 
-HRESULT Sprite::CreateConstantBuffer()
+void Sprite::InitConstantBuffer()
 {
 	//コンスタントバッファ作成
 	D3D11_BUFFER_DESC cb;
@@ -107,26 +152,7 @@ HRESULT Sprite::CreateConstantBuffer()
 	cb.MiscFlags = 0;
 	cb.StructureByteStride = 0;
 
-	// コンスタントバッファの作成
-	HRESULT hr;
-
-	hr = Direct3D::pDevice_->CreateBuffer(&cb, nullptr, &pConstantBuffer_);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, "コンスタントバッファの作成に失敗しました", "エラー", MB_OK);
-		return hr;
-	}
-
-	return S_OK;
-}
-
-HRESULT Sprite::LoadTexture(string fileName)
-{
-	pTexture_ = new Texture();
-
-	HRESULT hr;
-	pTexture_->Load(fileName);
-
-	return S_OK;
+	//定数バッファの作成
+	Direct3D::pDevice_->CreateBuffer(&cb, nullptr, &pConstantBuffer_);
 }
 

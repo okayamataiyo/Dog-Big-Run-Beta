@@ -479,7 +479,8 @@ void Fbx::Draw(Transform& _transform)
         D3D11_MAPPED_SUBRESOURCE pData;
         CONSTANT_BUFFER_MODEL cb;
         cb.matWVP = XMMatrixTranspose(_transform.GetWorldMatrix() * pCamera->GetViewMatrix() * pCamera->GetProjectionMatrix());
-        cb.matNormal = XMMatrixTranspose(_transform.GetNormalMatrix());
+        //cb.matNormal = XMMatrixTranspose(_transform.GetNormalMatrix());
+        cb.matNormal = XMMatrixTranspose(_transform.matRotate_ * XMMatrixInverse(nullptr, _transform.matScale_));
         cb.matW = XMMatrixTranspose(_transform.GetNormalMatrix());
         cb.diffuseColor = pMaterialList_[i].diffuse;
         cb.ambientColor = pMaterialList_[i].ambient;

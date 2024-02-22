@@ -38,25 +38,16 @@ protected:
 	ID3D11Buffer* pIndexBuffer_;
 	ID3D11Buffer* pConstantBuffer_;
 	Texture* pTexture_;
+
 public:
 	Sprite();
 	~Sprite();
-
-	HRESULT Initialize();
-
+	HRESULT Load(string fileName);               //テクスチャをロード
+	void Draw(Transform& _transform, RECT _rect, float _alpha);
 	void Release();
-
 	XMFLOAT2 GetTextureSize() { return pTexture_->GetSize(); }
-
-private:
-	virtual void InitVertexData();
-	HRESULT CreateVertexBuffer();         //頂点バッファを作成
-
-	virtual void InitIndexData();        //インデックス情報を準備
-	HRESULT CreateIndexBuffer();         //インデックスバッファを作成
-
-	HRESULT CreateConstantBuffer();      //コンスタントバッファ作成
-
-	HRESULT LoadTexture(string fileName);               //テクスチャをロード
+	void InitVertex();
+	void InitIndex();        //インデックス情報を準備
+	void InitConstantBuffer();
 };
 
