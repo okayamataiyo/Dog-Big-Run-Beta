@@ -300,7 +300,7 @@ void Player::PlayerGravity()
     rayGravityDist_ = downData.dist;
     float playerFling = 0.7;
     //プレイヤーが浮いていないとき
-    ImGui::Text("downdist=%f",rayGravityDist_);
+    ImGui::Text("rayGravityDist_=%f",rayGravityDist_);
     if (rayGravityDist_ + posY_ <= playerFling)
     {
         //ジャンプしてない＆すり抜け床の上にいない

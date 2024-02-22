@@ -30,17 +30,21 @@ struct RayCastData
 	RayCastData() { dist = 99999.0f; }
 };
 
+/// <summary>
+/// FBXファイルを扱うクラス
+/// </summary>
 class Fbx
 {
 	//マテリアル
 	struct MATERIAL
 	{
+		DWORD polygonCount;
 		Texture* pTexture;
 		XMFLOAT4 diffuse;
 		XMFLOAT4 ambient;
 		XMFLOAT4 specular;
 		float shineness;
-	}*pMaterial_;
+	}*pMaterialList_;
 
 	//コンスタントバッファー
 	struct CONSTANT_BUFFER_MODEL {
@@ -85,7 +89,6 @@ class Fbx
 	ID3D11Buffer* pVertexBuffer_;		//頂点バッファ
 	ID3D11Buffer** pIndexBuffer_;		//インデックスバッファ
 	ID3D11Buffer* pConstantBuffer_;	//コンスタントバッファ
-	MATERIAL* pMaterialList_;
 	vector<int>    indexCount_;
 	vector<Fbx*>   parts_;
 	
@@ -100,6 +103,7 @@ class Fbx
 	void InitIndex(fbxsdk::FbxMesh* _mesh);
 	void InitConstantBuffer();
 	void InitMaterial(fbxsdk::FbxNode* _pNode);
+	void InitTexture(fbxsdk::FbxSurfaceMaterial* _pMaterial, const DWORD& _i);
 	void InitSkelton(FbxMesh* _pMesh);
 	bool IsFloatColor_;
 	XMFLOAT4 dColor_;

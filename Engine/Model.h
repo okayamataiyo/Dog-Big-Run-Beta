@@ -5,6 +5,8 @@
 #include"Transform.h"
 #include"Fbx.h"
 
+using std::string;
+
 /// <summary>
 /// 3Dモデル(FBXファイル)を管理する
 /// </summary>
@@ -32,7 +34,7 @@ namespace Model
 		}
 	};
 	void Initialize();
-	int Load(std::string fileName);
+	int Load(string fileName);
 	void SetAnimFrame(int _hModel, int _startFrame, int _endFrame, float _animSpeed);
 	void SetTransform(int hModel, Transform transform);
 	int GetAnimFrame(int _hModel_);

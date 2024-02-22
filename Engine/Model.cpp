@@ -1,5 +1,9 @@
 #include "Model.h"
 #include "Direct3D.h"
+
+/// <summary>
+/// 3Dモデル(FBXファイル)を管理する
+/// </summary>
 namespace Model
 {
 	//モデルのポインタをぶち込んでおくベクタ
@@ -32,7 +36,6 @@ namespace Model
 
 		modelList.push_back(pData);
 		return(modelList.size() - 1);	//今呼んだモデルのモデル番号を返す
-
 	}
 
 	void SetAnimFrame(int _hModel, int _startFrame, int _endFrame, float _animSpeed)
